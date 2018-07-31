@@ -3,6 +3,7 @@ import datetime
 from underlight_api import bcrypt
 from collections import OrderedDict
 from mysql.connector.cursor import MySQLCursorPrepared
+from .utils.player import STATUS_DESCRIPTIONS
 
 class UnderlightDatabase:
     ACCEPTABLE_DBS = ['billing', 'level', 'item', 'guild', 'server', 'player']
@@ -121,3 +122,28 @@ class UnderlightDatabase:
         cursor.close()
         return True
 
+    def get_player_ids(self, id):
+        cxn = self.connect(db = 'ul_player')
+        stmt = 'SELECT player_id FROM ul_player.player WHERE billing_id = ?'
+        cursor = cxn.cursor(cursor_class=MySQLCursorPrepared)
+        cursor.execute(stmt, (id,))
+        all = cursor.fetchall()
+        return [p[0] for p in all]
+    
+    def get_player_info(self, pid):
+        cxn = self.connect(db = 'ul_player')
+        stmt = 'SELECT player_id,player_name,password,acct_type,logged_in,last_login_date FROM player WHERE player_id = ?'
+        cursor = cxn.cursor(cursor_class=MySQLCursorPrepared)
+        cursor.execute(stmt, (pid,))
+        all = cursor.fetchall()
+        if len(all):
+            return {
+                'pid': all[0][0],
+                'name': all[0][1],
+                'password': all[0][2],
+                'acctType': STATUS_DESCRIPTIONS.get(all[0][3]),
+                'loggedIn': all[0][4],
+                'lastLogin': str(all[0][5])
+            }
+        else:
+            return None
