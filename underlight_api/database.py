@@ -1,12 +1,14 @@
 import mysql.connector
 import datetime
-from ulaccount import bcrypt
+from underlight_api import bcrypt
+from collections import OrderedDict
 from mysql.connector.cursor import MySQLCursorPrepared
 
 class UnderlightDatabase:
     ACCEPTABLE_DBS = ['billing', 'level', 'item', 'guild', 'server', 'player']
     @classmethod
     def get(cls):
+        '''Use this as your factory so it only connects once.'''
         if getattr(cls, 'inst', None) is None:
             cls.inst = UnderlightDatabase('pw.txt')
             cls.inst.connect()
@@ -83,3 +85,39 @@ class UnderlightDatabase:
         cxn.commit()
         cursor.close()
         return id
+
+    def update_account(self, id, fullName = None, emailAddress = None, password = None):
+        cxn = self.connect(db = 'ul_billing')
+        jsonToCol = {
+            'real_name': fullName,
+            'email': emailAddress,
+            'password': bcrypt.generate_password_hash(password).decode('utf-8') if password is not None else None
+        }
+        updates = OrderedDict({k:v for k,v in jsonToCol.items() if v is not None})        
+        stmt = 'UPDATE ul_billing.accounts SET ' + ','.join(['%s = %%s' % col for col in updates.keys()])
+        w = ' WHERE billing_id=%d' % id
+        stmt += w
+        cursor = cxn.cursor(cursor_class=MySQLCursorPrepared)
+        cursor.execute(stmt, tuple(updates.values()))
+        cxn.commit()
+        cursor.close()
+        return True
+    
+    def token_in_blacklist(self, jti):
+        cxn = self.connect(db = 'ul_billing')
+        stmt = 'SELECT count(*) FROM ul_billing.token_blacklist WHERE token_id = %s'
+        cursor = cxn.cursor(cursor_class=MySQLCursorPrepared)
+        cursor.execute(stmt, (jti,))
+        all = cursor.fetchall()
+        (count,) = all[0]
+        return count > 0
+    
+    def blacklist_token(self, jti):
+        cxn = self.connect(db = 'ul_billing')
+        stmt = 'INSERT INTO ul_billing.token_blacklist (token_id) VALUES(%s)'
+        cursor = cxn.cursor(cursor_class=MySQLCursorPrepared)
+        cursor.execute(stmt, (jti,))
+        cxn.commit()
+        cursor.close()
+        return True
+
