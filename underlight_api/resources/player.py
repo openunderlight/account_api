@@ -10,5 +10,5 @@ class PlayerDetails(Resource):
         if id != ident:
             raise ValueError('Requesting details for acct %d but not permissioned' % id)
         pids = db.get_player_ids(id)
-        player_info = [db.get_player_info(pid) for pid in pids]
-        return player_info
+        return [db.get_player_info(pid) for pid in pids]
+        

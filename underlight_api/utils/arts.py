@@ -161,3 +161,11 @@ ARTS_TABLE = [
     ("Enfeeblement", 4),
     ("Dreamwise_Evoke", 5),   
 ]
+
+art_map = {art_name:art_index for art_index,(art_name,art_stat) in enumerate(ARTS_TABLE)}
+
+def focus_index(focus_name):
+    fidx = STATS.index(focus_name.upper())
+    if fidx not in range(1,5):
+        raise ValueError('Bad focus name')
+    return fidx
