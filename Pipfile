@@ -9,6 +9,7 @@ mysql-connector-python = "*"
 flask-restful = "*"
 flask-jwt-extended = "*"
 flask-bcrypt = "*"
+tabulate = "*"
 
 [dev-packages]
 
