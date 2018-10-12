@@ -17,7 +17,7 @@ def get_guild_drains(db):
     stmt = '''select count(guildplayer.player_id),guild_id,rank from 
         guildplayer,player where 
             guildplayer.player_id = player.player_id and 
-            player.acct_type=65 and 
+            player.acct_type=80 and 
             guildplayer.player_id not in (
                 select distinct g1.player_id from guildplayer g1,guildplayer g2 where 
                     g1.player_id = g2.player_id and 
